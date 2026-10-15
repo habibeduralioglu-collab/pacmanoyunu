@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Pac-Man Asal Sayılar | TYMM 6. Sınıf Matematik</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background-color: #030712;
+      color: #f8fafc;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 10px;
+      overflow-x: hidden;
+    }
+
+    /* Üst Başlık & HUD */
+    header {
+      width: 100%;
+      max-width: 540px;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #facc15;
+      text-shadow: 0 0 10px rgba(250, 204, 21, 0.4);
+      letter-spacing: 0.5px;
+    }
+
+    .sub-title {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    /* Bilgi ve Skor Çubuğu */
+    .hud-bar {
+      width: 100%;
+      max-width: 532px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0f172a;
+      border: 2px solid #1e293b;
+      border-radius: 12px;
+      padding: 8px 14px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .hud-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .hud-label {
+      font-size: 10px;
+      color: #64748b;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .hud-val {
+      font-size: 16px;
+      font-weight: 800;
+      font-family: monospace;
+      color: #38bdf8;
+    }
+
+    .lives-icons {
+      color: #ef4444;
+      font-size: 16px;
+      letter-spacing: 2px;
+    }
+
+    /* Hedef Talimat Rozeti */
+    .target-banner {
+      width: 100%;
+      max-width: 532px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34d399;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+      padding: 6px 10px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    /* Canvas Sahnesi */
+    .canvas-container {
+      position: relative;
+      width: 532px;
+      height: 560px;
+      max-width: 100%;
+      border: 4px solid #2563eb;
+      border-radius: 16px;
+      box-shadow: 0 0 25px rgba(37, 99, 235, 0.4);
+      background-color: #090d16;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Ekran Titremesi */
+    .shake {
+      animation: shake-anim 0.3s ease-in-out;
+    }
+
+    @keyframes shake-anim {
+      0%, 100% { transform: translate(0, 0); }
+      20% { transform: translate(-4px, 4px); }
+      40% { transform: translate(4px, -4px); }
+      60% { transform: translate(-4px, -2px); }
+      80% { transform: translate(4px, 2px); }
+    }
+
+    /* Kırmızı Flaş Efekti */
+    .flash-red {
+      animation: flash-anim 0.3s ease;
+    }
+
+    @keyframes flash-anim {
+      0% { box-shadow: 0 0 40px #ef4444; }
+      100% { box-shadow: 0 0 25px rgba(37, 99, 235, 0.4); }
+    }
+
+    /* Overlay / Modallar */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(3, 7, 18, 0.92);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      text-align: center;
+      z-index: 20;
+    }
+
+    .overlay.hidden {
+      display: none;
+    }
+
+    .overlay h2 {
+      font-size: 24px;
+      font-weight: 800;
+      color: #facc15;
+      margin-bottom: 8px;
+    }
+
+    .overlay p {
+      font-size: 13px;
+      color: #cbd5e1;
+      max-width: 400px;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+
+    .btn {
+      background: #facc15;
+      color: #0f172a;
+      font-size: 14px;
+      font-weight: 800;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 28px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(250, 204, 21, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      background: #fde047;
+      transform: scale(1.04);
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    /* Eğitici Özet Kutusu */
+    .educational-box {
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid #3b82f6;
+      border-radius: 10px;
+      padding: 12px;
+      margin: 12px 0 18px 0;
+      text-align: left;
+      font-size: 12px;
+      color: #e2e8f0;
+      line-height: 1.4;
+    }
+
+    .educational-box strong {
+      color: #60a5fa;
+    }
+
+    /* Anlık Bilgi Bandı (Feedback) */
+    .feedback-banner {
+      width: 100%;
+      max-width: 532px;
+      margin-top: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      text-align: center;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+    }
+
+    /* Mobil Kontroller (D-Pad) */
+    .d-pad {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 10px;
+      gap: 3px;
+    }
+
+    .d-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .d-btn {
+      width: 54px;
+      height: 44px;
+      background: #1e293b;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .d-btn:active {
+      background: #2563eb;
+    }
+
+    @media (min-width: 768px) {
+      .d-pad {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Üst Başlık -->
+  <header>
+    <h1>PAC-MAN: ASAL SAYILAR</h1>
+    <div class="sub-title">Türkiye Yüzyılı Maarif Modeli (TYMM) • 6. Sınıf Matematik</div>
+  </header>
+
+  <!-- Skor ve Bilgi Çubuğu -->
+  <div class="hud-bar">
+    <div class="hud-item">
+      <span class="hud-label">Skor</span>
+      <span class="hud-val" id="scoreVal">0</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">Toplanan Asal</span>
+      <span class="hud-val" id="primesVal" style="color: #4ade80;">0</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">Kalan Can</span>
+      <span class="lives-icons" id="livesVal">❤️ ❤️ ❤️</span>
+    </div>
+  </div>
+
+  <!-- Hedef Talimatı -->
+  <div class="target-banner">
+    🎯 HEDEF: Labirentteki Sadece ASAL SAYILARI Ye! (Asal Olmayanlar Can Götürür)
+  </div>
+
+  <!-- Oyun Alanı (Canvas & Overlays) -->
+  <div class="canvas-container" id="canvasBox">
+    <canvas id="gameCanvas" width="532" height="560"></canvas>
+
+    <!-- BAŞLANGIÇ EKRANI -->
+    <div class="overlay" id="startScreen">
+      <h2>PAC-MAN ASAL SAYILAR</h2>
+      <p>
+        Sarı Pac-Man'i yönlendirerek labirentteki <strong>ASAL SAYILARI</strong> topla!
+      </p>
+      <div class="educational-box">
+        <strong>Kurallar:</strong><br>
+        • Asal Sayı yersen: <strong>+10 Puan</strong><br>
+        • Bileşik veya 1 yersen: <strong>-5 Puan ve -1 Can!</strong><br>
+        • <strong>1 ASAL DEĞİLDİR!</strong> 1'i kesinlikle yeme!<br>
+        • Çift sayılardan <strong>sadece 2 asaldır!</strong><br>
+        • Hayaletlere temas etmek doğrudan <strong>1 Can</strong> götürür!
+      </div>
+      <button class="btn" id="startBtn">OYUNA BAŞLA</button>
+    </div>
+
+    <!-- OYUN BİTTİ EKRANI -->
+    <div class="overlay hidden" id="gameOverScreen">
+      <h2 style="color: #ef4444;">OYUN BİTTİ!</h2>
+      <p id="gameOverStats">Toplam Skor: 0 | Toplanan Asal: 0</p>
+      
+      <!-- TYMM 6. Sınıf Müfredat Özeti -->
+      <div class="educational-box">
+        <strong>📚 TYMM 6. Sınıf Ders Özeti:</strong><br>
+        &quot;Unutma: 1'den ve kendisinden başka böleni olmayan 1'den büyük doğal sayılara asal sayı denir.&quot;<br><br>
+        • <strong>En küçük asal sayı 2'dir.</strong><br>
+        • <strong>2 hariç hiçbir çift sayı asal değildir!</strong><br>
+        • <strong>1 sayısı asal değildir!</strong>
+      </div>
+      <button class="btn" id="restartBtn">YENİDEN OYNA</button>
+    </div>
+  </div>
+
+  <!-- Eğitici Geribildirim Bildirimi -->
+  <div class="feedback-banner" id="feedbackBanner">
+    Yön tuşları veya WASD ile hareket et. Sadece asal sayıları hedefle!
+  </div>
+
+  <!-- Mobil / Tablet D-Pad Kontrolleri -->
+  <div class="d-pad">
+    <button class="d-btn" id="btnUp">▲</button>
+    <div class="d-row">
+      <button class="d-btn" id="btnLeft">◀</button>
+      <button class="d-btn" id="btnDown">▼</button>
+      <button class="d-btn" id="btnRight">▶</button>
+    </div>
+  </div>
+
+  <script>
+    // -------------------------------------------------------------------------
+    // 1. ASAL SAYI MATEMATİK MOTORU (TYMM 6. SINIF UYUMLU)
+    // -------------------------------------------------------------------------
+    const PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97];
+    const TRICKY_COMPOSITES = [1, 9, 15, 21, 25, 27, 33, 35, 39, 49, 51, 57, 77, 81, 91, 93, 99];
+
+    function isPrime(n) {
+      if (n <= 1) return false;
+      if (n === 2) return true;
+      if (n % 2 === 0) return false;
+      for (let i = 3; i * i <= n; i += 2) {
+        if (n % i === 0) return false;
+      }
+      return true;
+    }
+
+    function getCompositeExplanation(n) {
+      if (n === 1) return "1 asal değildir! (Tek bir böleni vardır)";
+      if (n % 2 === 0) return `${n} = 2 × ${n / 2} (Çift sayıdır, asal olamaz)`;
+      for (let i = 3; i * i <= n; i += 2) {
+        if (n % i === 0) {
+          return `${n} = ${i} × ${n / i} (${i}'e bölünür, bileşiktir)`;
+        }
+      }
+      return `${n} bileşik sayıdır!`;
+    }
+
+    // -------------------------------------------------------------------------
+    // 2. 8-BİT SES SENTEZLEYİCİ (WEB AUDIO API - SIFIR HARİCİ KÜTÜPHANE)
+    // -------------------------------------------------------------------------
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) audioCtx = new AudioContextClass();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playSound(type) {
+      initAudio();
+      if (!audioCtx) return;
+
+      const now = audioCtx.currentTime;
+
+      if (type === 'prime') {
+        // Asal sayı yendiğinde neşeli yükselen melodi
+        [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+          gain.gain.setValueAtTime(0.12, now + idx * 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.1);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now + idx * 0.05);
+          osc.stop(now + idx * 0.05 + 0.11);
+        });
+      } else if (type === 'composite') {
+        // Bileşik sayı yendiğinde hata sesi
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(200, now);
+        osc.frequency.linearRampToValueAtTime(100, now + 0.22);
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.23);
+      } else if (type === 'ghost') {
+        // Hayalet çarpma darbesi
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(350, now);
+        osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.31);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 3. LABİRENT IZGARASI & OYUN ELEMANLARI
+    // -------------------------------------------------------------------------
+    const MAZE = [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,0,1],
+      [1,0,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,0,1],
+      [1,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1],
+      [1,1,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,1,1],
+      [1,1,1,1,0,1,0,0,0,0,0,0,0,1,0,1,1,1,1],
+      [0,0,0,0,0,0,0,1,1,2,1,1,0,0,0,0,0,0,0],
+      [1,1,1,1,0,1,0,1,2,2,2,1,0,1,0,1,1,1,1],
+      [1,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,1],
+      [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,0,1],
+      [1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1],
+      [1,1,0,1,0,1,0,1,1,1,1,1,0,1,0,1,0,1,1],
+      [1,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1],
+      [1,0,1,1,1,1,1,1,0,1,0,1,1,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ];
+
+    const COLS = 19;
+    const ROWS = 20;
+    const TILE_SIZE = 28;
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const canvasBox = document.getElementById('canvasBox');
+
+    const scoreVal = document.getElementById('scoreVal');
+    const primesVal = document.getElementById('primesVal');
+    const livesVal = document.getElementById('livesVal');
+    const feedbackBanner = document.getElementById('feedbackBanner');
+    const startScreen = document.getElementById('startScreen');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    const gameOverStats = document.getElementById('gameOverStats');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+
+    // Oyun Durum Değişkenleri
+    let isRunning = false;
+    let score = 0;
+    let lives = 3;
+    let primesEaten = 0;
+
+    let pacman = {
+      x: 9 * TILE_SIZE + 14,
+      y: 14 * TILE_SIZE + 14,
+      dirX: 0,
+      dirY: 0,
+      nextDirX: 0,
+      nextDirY: 0,
+      speed: 2.7,
+      mouthAngle: 0.2,
+      mouthDir: 1,
+      invulnerable: 0
+    };
+
+    let ghosts = [
+      { x: 8 * TILE_SIZE + 14, y: 10 * TILE_SIZE + 14, dirX: 0, dirY: -1, color: '#ef4444', speed: 2.1 },
+      { x: 10 * TILE_SIZE + 14, y: 10 * TILE_SIZE + 14, dirX: 0, dirY: -1, color: '#06b6d4', speed: 1.8 }
+    ];
+
+    let numbers = [];
+    let particles = [];
+    let floatingTexts = [];
+
+    // Yürünebilir hücreler
+    function getWalkableTiles() {
+      const list = [];
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if (MAZE[r][c] === 0 && !(r >= 8 && r <= 11 && c >= 7 && c <= 11)) {
+            if (!(r === 14 && c === 9)) {
+              list.push({ col: c, row: r });
+            }
+          }
+        }
+      }
+      return list;
+    }
+
+    // Rastgele sayı üretici (Dengeli ve pedagojik dağılım)
+    function generateNumber(forcePrime = false) {
+      if (forcePrime) {
+        return PRIMES[Math.floor(Math.random() * PRIMES.length)];
+      }
+      const r = Math.random();
+      if (r < 0.35) {
+        return PRIMES[Math.floor(Math.random() * PRIMES.length)];
+      } else if (r < 0.65) {
+        return TRICKY_COMPOSITES[Math.floor(Math.random() * TRICKY_COMPOSITES.length)];
+      } else {
+        return Math.floor(Math.random() * 99) + 2;
+      }
+    }
+
+    // Sayıları labirente yerleştir & HER ZAMAN EN AZ 3 ASAL SAYI KURALINI GARANTİLE
+    function initNumbers() {
+      const walkable = getWalkableTiles();
+      walkable.sort(() => 0.5 - Math.random());
+      const selected = walkable.slice(0, 18);
+
+      numbers = [];
+      let primeCount = 0;
+
+      selected.forEach(t => {
+        const force = primeCount < 4;
+        const val = generateNumber(force);
+        const p = isPrime(val);
+        if (p) primeCount++;
+        numbers.push({ col: t.col, row: t.row, value: val, isPrime: p });
+      });
+
+      // En az 3 asal sayı garantisi
+      while (primeCount < 3) {
+        for (let i = 0; i < numbers.length; i++) {
+          if (!numbers[i].isPrime) {
+            const pVal = PRIMES[Math.floor(Math.random() * PRIMES.length)];
+            numbers[i].value = pVal;
+            numbers[i].isPrime = true;
+            primeCount++;
+            if (primeCount >= 3) break;
+          }
+        }
+      }
+    }
+
+    function spawnReplacement() {
+      const walkable = getWalkableTiles();
+      const occupied = new Set(numbers.map(n => `${n.col},${n.row}`));
+      const pacC = Math.floor(pacman.x / TILE_SIZE);
+      const pacR = Math.floor(pacman.y / TILE_SIZE);
+      occupied.add(`${pacC},${pacR}`);
+
+      const free = walkable.filter(t => !occupied.has(`${t.col},${t.row}`));
+      if (free.length === 0) return;
+
+      const tile = free[Math.floor(Math.random() * free.length)];
+      const currentPrimes = numbers.filter(n => n.isPrime).length;
+      // Ekranda 3'ten az asal kalırsa MUTLAKA asal üret
+      const forcePrime = currentPrimes < 3;
+      const val = generateNumber(forcePrime);
+
+      numbers.push({
+        col: tile.col,
+        row: tile.row,
+        value: val,
+        isPrime: isPrime(val)
+      });
+    }
+
+    function canMove(x, y, radius = 9) {
+      if (y >= 9 * TILE_SIZE && y < 10 * TILE_SIZE) {
+        if (x < 0 || x > COLS * TILE_SIZE) return true;
+      }
+
+      const points = [
+        { cx: x - radius, cy: y - radius },
+        { cx: x + radius, cy: y - radius },
+        { cx: x - radius, cy: y + radius },
+        { cx: x + radius, cy: y + radius }
+      ];
+
+      for (let p of points) {
+        const c = Math.floor(p.cx / TILE_SIZE);
+        const r = Math.floor(p.cy / TILE_SIZE);
+        if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return false;
+        if (MAZE[r][c] === 1) return false;
+      }
+      return true;
+    }
+
+    // -------------------------------------------------------------------------
+    // 4. KONTROLLER (KLAVYE VE DOKUNMATİK)
+    // -------------------------------------------------------------------------
+    function setDirection(dx, dy) {
+      pacman.nextDirX = dx;
+      pacman.nextDirY = dy;
+      initAudio();
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+        e.preventDefault();
+      }
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') setDirection(0, -1);
+      if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') setDirection(0, 1);
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') setDirection(-1, 0);
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') setDirection(1, 0);
+    });
+
+    document.getElementById('btnUp').onclick = () => setDirection(0, -1);
+    document.getElementById('btnDown').onclick = () => setDirection(0, 1);
+    document.getElementById('btnLeft').onclick = () => setDirection(-1, 0);
+    document.getElementById('btnRight').onclick = () => setDirection(1, 0);
+
+    // -------------------------------------------------------------------------
+    // 5. OYUN DÖNGÜSÜ & EFEKTLER
+    // -------------------------------------------------------------------------
+    function triggerMistakeEffect() {
+      canvasBox.classList.remove('shake', 'flash-red');
+      void canvasBox.offsetWidth; // Reflow
+      canvasBox.classList.add('shake', 'flash-red');
+      setTimeout(() => {
+        canvasBox.classList.remove('shake', 'flash-red');
+      }, 350);
+    }
+
+    function updateHUD() {
+      scoreVal.textContent = score;
+      primesVal.textContent = primesEaten;
+      let hearts = '';
+      for (let i = 0; i < lives; i++) hearts += '❤️ ';
+      livesVal.textContent = hearts.trim() || '💀';
+    }
+
+    function resetGame() {
+      score = 0;
+      lives = 3;
+      primesEaten = 0;
+      pacman.x = 9 * TILE_SIZE + 14;
+      pacman.y = 14 * TILE_SIZE + 14;
+      pacman.dirX = 0;
+      pacman.dirY = 0;
+      pacman.nextDirX = 0;
+      pacman.nextDirY = 0;
+      pacman.invulnerable = 0;
+
+      ghosts[0].x = 8 * TILE_SIZE + 14;
+      ghosts[0].y = 10 * TILE_SIZE + 14;
+      ghosts[0].dirX = 0;
+      ghosts[0].dirY = -1;
+
+      ghosts[1].x = 10 * TILE_SIZE + 14;
+      ghosts[1].y = 10 * TILE_SIZE + 14;
+      ghosts[1].dirX = 0;
+      ghosts[1].dirY = -1;
+
+      particles = [];
+      floatingTexts = [];
+      initNumbers();
+      updateHUD();
+      feedbackBanner.textContent = "Labirentteki sadece ASAL sayıları topla!";
+      feedbackBanner.style.color = "#cbd5e1";
+    }
+
+    function endGame() {
+      isRunning = false;
+      gameOverStats.textContent = `Toplam Skor: ${score} | Toplanan Asal: ${primesEaten}`;
+      gameOverScreen.classList.remove('hidden');
+    }
+
+    startBtn.onclick = () => {
+      initAudio();
+      resetGame();
+      startScreen.classList.add('hidden');
+      isRunning = true;
+    };
+
+    restartBtn.onclick = () => {
+      initAudio();
+      resetGame();
+      gameOverScreen.classList.add('hidden');
+      isRunning = true;
+    };
+
+    function gameLoop() {
+      if (isRunning) {
+        // Pacman hareket
+        if (pacman.nextDirX !== 0 || pacman.nextDirY !== 0) {
+          if (canMove(pacman.x + pacman.nextDirX * pacman.speed, pacman.y + pacman.nextDirY * pacman.speed)) {
+            pacman.dirX = pacman.nextDirX;
+            pacman.dirY = pacman.nextDirY;
+          }
+        }
+        if (canMove(pacman.x + pacman.dirX * pacman.speed, pacman.y + pacman.dirY * pacman.speed)) {
+          pacman.x += pacman.dirX * pacman.speed;
+          pacman.y += pacman.dirY * pacman.speed;
+        }
+
+        // Tünel
+        if (pacman.x < -TILE_SIZE / 2) pacman.x = COLS * TILE_SIZE + TILE_SIZE / 2;
+        else if (pacman.x > COLS * TILE_SIZE + TILE_SIZE / 2) pacman.x = -TILE_SIZE / 2;
+
+        // Ağız animasyonu
+        if (pacman.dirX !== 0 || pacman.dirY !== 0) {
+          pacman.mouthAngle += 0.04 * pacman.mouthDir;
+          if (pacman.mouthAngle > 0.45) { pacman.mouthAngle = 0.45; pacman.mouthDir = -1; }
+          else if (pacman.mouthAngle < 0.05) { pacman.mouthAngle = 0.05; pacman.mouthDir = 1; }
+        }
+
+        if (pacman.invulnerable > 0) pacman.invulnerable -= 1 / 60;
+
+        // Sayı yeme kontrolü
+        for (let i = numbers.length - 1; i >= 0; i--) {
+          const item = numbers[i];
+          const numX = item.col * TILE_SIZE + 14;
+          const numY = item.row * TILE_SIZE + 14;
+          const dist = Math.hypot(pacman.x - numX, pacman.y - numY);
+
+          if (dist < 20) {
+            numbers.splice(i, 1);
+
+            if (item.isPrime) {
+              score += 10;
+              primesEaten++;
+              playSound('prime');
+              feedbackBanner.innerHTML = `🌟 <strong>+10 PUAN!</strong> ${item.value} sadece 1'e ve kendisine bölünen bir <strong>ASAL SAYIDIR</strong>.`;
+              feedbackBanner.style.color = '#34d399';
+
+              floatingTexts.push({ text: `+10 ASAL (${item.value})`, x: numX, y: numY - 10, color: '#4ade80', alpha: 1 });
+              for (let p = 0; p < 12; p++) {
+                particles.push({
+                  x: numX, y: numY,
+                  vx: (Math.random() - 0.5) * 4,
+                  vy: (Math.random() - 0.5) * 4,
+                  color: '#22c55e', alpha: 1, size: 3
+                });
+              }
+            } else {
+              score = Math.max(0, score - 5);
+              lives--;
+              playSound('composite');
+              triggerMistakeEffect();
+              const expl = getCompositeExplanation(item.value);
+              feedbackBanner.innerHTML = `⚠️ <strong>-5 PUAN & -1 CAN!</strong> ${expl}`;
+              feedbackBanner.style.color = '#f87171';
+
+              floatingTexts.push({ text: `-5 BİLEŞİK!`, x: numX, y: numY - 10, color: '#ef4444', alpha: 1 });
+
+              if (lives <= 0) {
+                updateHUD();
+                endGame();
+                return;
+              }
+            }
+            updateHUD();
+            spawnReplacement();
+            break;
+          }
+        }
+
+        // Hayaletler
+        ghosts.forEach((ghost, gIdx) => {
+          const cx = Math.floor(ghost.x / TILE_SIZE) * TILE_SIZE + 14;
+          const cy = Math.floor(ghost.y / TILE_SIZE) * TILE_SIZE + 14;
+          if (Math.hypot(ghost.x - cx, ghost.y - cy) < ghost.speed) {
+            ghost.x = cx;
+            ghost.y = cy;
+            const dirs = [
+              { dx: 0, dy: -1 }, { dx: 0, dy: 1 }, { dx: -1, dy: 0 }, { dx: 1, dy: 0 }
+            ].filter(d => !(d.dx === -ghost.dirX && d.dy === -ghost.dirY) && canMove(ghost.x + d.dx * TILE_SIZE, ghost.y + d.dy * TILE_SIZE, 8));
+
+            if (dirs.length > 0) {
+              if (gIdx === 0 && Math.random() < 0.6) {
+                dirs.sort((a, b) => Math.hypot(ghost.x + a.dx * 28 - pacman.x, ghost.y + a.dy * 28 - pacman.y) - Math.hypot(ghost.x + b.dx * 28 - pacman.x, ghost.y + b.dy * 28 - pacman.y));
+                ghost.dirX = dirs[0].dx;
+                ghost.dirY = dirs[0].dy;
+              } else {
+                const ch = dirs[Math.floor(Math.random() * dirs.length)];
+                ghost.dirX = ch.dx;
+                ghost.dirY = ch.dy;
+              }
+            } else {
+              ghost.dirX = -ghost.dirX;
+              ghost.dirY = -ghost.dirY;
+            }
+          }
+          ghost.x += ghost.dirX * ghost.speed;
+          ghost.y += ghost.dirY * ghost.speed;
+
+          // Hayalet çarpışması
+          if (Math.hypot(pacman.x - ghost.x, pacman.y - ghost.y) < 18 && pacman.invulnerable <= 0) {
+            lives--;
+            pacman.invulnerable = 2.5;
+            playSound('ghost');
+            triggerMistakeEffect();
+            updateHUD();
+            feedbackBanner.innerHTML = "👻 <strong>HAYALETE YAKALANDIN!</strong> 1 can kaybettin.";
+            feedbackBanner.style.color = '#fb923c';
+            floatingTexts.push({ text: "HAYALET! -1 CAN", x: pacman.x, y: pacman.y - 12, color: '#f97316', alpha: 1 });
+
+            if (lives <= 0) {
+              endGame();
+              return;
+            }
+          }
+        });
+
+        // Parçacıklar
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.alpha -= 0.03;
+          if (p.alpha <= 0) particles.splice(i, 1);
+        }
+
+        // Uçuşan yazılar
+        for (let i = floatingTexts.length - 1; i >= 0; i--) {
+          const ft = floatingTexts[i];
+          ft.y -= 0.7;
+          ft.alpha -= 0.02;
+          if (ft.alpha <= 0) floatingTexts.splice(i, 1);
+        }
+      }
+
+      // --- ÇİZİM ---
+      ctx.fillStyle = '#090d16';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Duvarlar
+      ctx.strokeStyle = '#2563eb';
+      ctx.lineWidth = 3;
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if (MAZE[r][c] === 1) {
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(c * TILE_SIZE + 2, r * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+            ctx.strokeRect(c * TILE_SIZE + 2, r * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+          }
+        }
+      }
+
+      // Sayılar
+      numbers.forEach(item => {
+        const cx = item.col * TILE_SIZE + 14;
+        const cy = item.row * TILE_SIZE + 14;
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, 11, 0, Math.PI * 2);
+        ctx.fillStyle = '#1e293b';
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = '#64748b';
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(item.value, cx, cy + 1);
+      });
+
+      // Hayaletler
+      ghosts.forEach(g => {
+        ctx.save();
+        ctx.translate(g.x, g.y);
+        ctx.fillStyle = g.color;
+        ctx.beginPath();
+        ctx.arc(0, -2, 11, Math.PI, 0, false);
+        ctx.lineTo(11, 11);
+        ctx.lineTo(4, 7);
+        ctx.lineTo(0, 11);
+        ctx.lineTo(-4, 7);
+        ctx.lineTo(-11, 11);
+        ctx.closePath();
+        ctx.fill();
+
+        // Gözler
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(-4, -2, 3, 0, Math.PI * 2);
+        ctx.arc(4, -2, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.arc(-4 + g.dirX * 1.5, -2 + g.dirY * 1.5, 1.5, 0, Math.PI * 2);
+        ctx.arc(4 + g.dirX * 1.5, -2 + g.dirY * 1.5, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // Pac-Man
+      if (pacman.invulnerable <= 0 || Math.floor(pacman.invulnerable * 10) % 2 === 0) {
+        ctx.save();
+        ctx.translate(pacman.x, pacman.y);
+        let rot = 0;
+        if (pacman.dirX === 1) rot = 0;
+        else if (pacman.dirX === -1) rot = Math.PI;
+        else if (pacman.dirY === 1) rot = Math.PI / 2;
+        else if (pacman.dirY === -1) rot = -Math.PI / 2;
+        ctx.rotate(rot);
+
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(0, 0, 13, pacman.mouthAngle, Math.PI * 2 - pacman.mouthAngle);
+        ctx.lineTo(0, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        // Göz
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.arc(2, -7, 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Parçacıklar
+      particles.forEach(p => {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // Uçuşan Yazılar
+      floatingTexts.forEach(ft => {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, ft.alpha);
+        ctx.fillStyle = ft.color;
+        ctx.font = 'bold 13px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.restore();
+      });
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Başlangıç çizimini başlat
+    initNumbers();
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>

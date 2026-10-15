@@ -1,0 +1,6 @@
+{
+  "name": "Pac-Man Asal Sayılar | TYMM 6. Sınıf Matematik",
+  "description": "Türkiye Yüzyılı Maarif Modeli 6. sınıf 'Çarpanlar ve Katlar / Asal Sayılar' temasına uygun, HTML5 Canvas Pac-Man tarzı eğitici matematik oyunu.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
